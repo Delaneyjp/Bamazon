@@ -6,7 +6,7 @@
 
 All neccessary files, API's, packages, etc. are initialized, imported, and linked
 Axios was used to retrieve data from BandsInTown and OMDB APIs
-![Prompt One: Which Item](/bamazonimages/prompt1.png)
+![Prompt One: Which Item](/prompt1.png)
 
 
 
