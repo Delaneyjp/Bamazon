@@ -1,3 +1,5 @@
+
+//Tried unsuccessfuly to use .env file to hide db password
 // require('dotenv').config()
 
 // const db = require('db')
@@ -17,12 +19,12 @@ var connection = mysql.createConnection({
     // Your username
     user: 'root',
 
-    // Your password
-    password: 'jusjokin2',
+    // Your password 
+    password: '', /*removed for viewers*/
     database: 'Bamazon'
 });
 
-// validateInput makes sure that the user is supplying only positive integers for their inputs
+// validateInput: only positive numbers can be entered
 function validateInput(value) {
     var integer = Number.isInteger(parseFloat(value));
     var sign = Math.sign(value);
@@ -30,13 +32,11 @@ function validateInput(value) {
     if (integer && (sign === 1)) {
         return true;
     } else {
-        return 'Please enter a whole non-zero number.';
+        return 'Only numbers 1+ allowed.';
     }
 }
 
-// promptUserPurchase will prompt the user for the item/quantity they would like to purchase
 function promptUserPurchase() {
-    // console.log('___ENTER promptUserPurchase___');
 
     // Prompt the user to select an item
     inquirer.prompt([
@@ -55,19 +55,15 @@ function promptUserPurchase() {
             filter: Number
         }
     ]).then(function (input) {
-        // console.log('Customer has selected: \n    item_id = '  + input.item_id + '\n    quantity = ' + input.quantity);
 
         var item = input.item_id;
         var quantity = input.quantity;
 
-        // Query db to confirm that the given item ID exists in the desired quantity
+        // Query db to confirm that the entered item ID and quantity exists
         var queryStr = 'SELECT * FROM products WHERE ?';
 
         connection.query(queryStr, { item_id: item }, function (err, data) {
             if (err) throw err;
-
-            // If the user has selected an invalid item ID, data attay will be empty
-            // console.log('data = ' + JSON.stringify(data));
 
             if (data.length === 0) {
                 console.log('ERROR: Invalid Item ID. Please select a valid Item ID.');
@@ -76,31 +72,24 @@ function promptUserPurchase() {
             } else {
                 var productData = data[0];
 
-                // console.log('productData = ' + JSON.stringify(productData));
-                // console.log('productData.stock_quantity = ' + productData.stock_quantity);
-
-                // If the quantity requested by the user is in stock
+                // Let Customer know product is available 
                 if (quantity <= productData.stock_quantity) {
-                    console.log('Congratulations, the product you requested is in stock! Placing order!');
+                    console.log('Perfect! The requested product is in stock! Placing order now!');
 
-                    // Construct the updating query string
+                    // Construct the updating query string that will subtract the number that was ordered, and update. 
                     var updateQueryStr = 'UPDATE products SET stock_quantity = ' + (productData.stock_quantity - quantity) + ' WHERE item_id = ' + item;
-                    // console.log('updateQueryStr = ' + updateQueryStr);
 
-                    // Update the inventory
                     connection.query(updateQueryStr, function (err, data) {
                         if (err) throw err;
 
-                        console.log('Your oder has been placed! Your total is $' + productData.price * quantity);
-                        console.log('Thank you for shopping with us!');
+                        console.log('Success! Order Complete. \nTotal is $' + productData.price * quantity);
                         console.log("\n---------------------------------------------------------------------\n");
 
-                        // End the database connection
                         connection.end();
                     })
+                    // Let Customer know product is not available 
                 } else {
-                    console.log('Sorry, there is not enough product in stock, your order can not be placed as is.');
-                    console.log('Please modify your order.');
+                    console.log('Oh No! The requested product quantity is not in stock... Please request new quantity.');
                     console.log("\n---------------------------------------------------------------------\n");
 
                     displayInventory();
@@ -110,19 +99,16 @@ function promptUserPurchase() {
     })
 }
 
-// displayInventory will retrieve the current inventory from the database and output it to the console
+// displayInventory: Shows current inventory
 function displayInventory() {
-    // console.log('___ENTER displayInventory___');
 
-    // Construct the db query string
     queryStr = 'SELECT * FROM products';
 
-    // Make the db query
     connection.query(queryStr, function (err, data) {
         if (err) throw err;
 
-        console.log('Existing Inventory: ');
-        console.log('...................\n');
+        console.log('Current Available Inventory: ');
+        console.log('---------------------\n');
 
         var strOut = '';
         for (var i = 0; i < data.length; i++) {
@@ -137,16 +123,14 @@ function displayInventory() {
 
         console.log("---------------------------------------------------------------------\n");
 
-        //Prompt the user for item/quantity they would like to purchase
+        //Prompt the customer for item and the quantity they want to purchase
         promptUserPurchase();
     })
 }
 
-// runBamazon will execute the main application logic
+// runBamazon: executes logic
 function runBamazon() {
-    // console.log('___ENTER runBamazon___');
 
-    // Display the available inventory
     displayInventory();
 }
 
